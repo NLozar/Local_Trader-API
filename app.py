@@ -1,4 +1,4 @@
-from flask import Flask, Response, jsonify, request
+from flask import Flask, Response, jsonify
 from flask_restful import Api
 from DBHandler import DBHandler
 from decouple import config
@@ -20,12 +20,8 @@ def get_items_list():
         return Response(json.dumps({"message": "internal server error"}), status=500, mimetype="application/json")
     return jsonify(all_items)
 
-@app.route("/itemDetails", methods=["GET"])
-def get_item_details():
-    try:
-        uuid = request.headers["uuid"]
-    except KeyError:
-        return Response(json.dumps({"message": "item uuid header missing"}), status=400, mimetype="application/json")
+@app.route("/itemDetails/<uuid>", methods=["GET"])
+def get_item_details(uuid):
     try:
         details = db.get_item_details(uuid)
         if not details:
