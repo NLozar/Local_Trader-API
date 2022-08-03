@@ -25,7 +25,9 @@ class DBHandler:
         return items
 
     def get_item_details(self, uuid):
-        self.cursor.execute(f"select * from items where uuid='{uuid}'") # SQL INJECTION VULN
+        query = "select * from items where uuid=%s"
+        val = (uuid,)
+        self.cursor.execute(query, val)
         res = self.cursor.fetchone()
         if not res:
             return None
