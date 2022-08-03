@@ -1,6 +1,5 @@
 import mysql.connector
 from decouple import config
-import bcrypt
 
 class DBHandler:
     def __init__(self, user, pw, host, port, db):
@@ -12,7 +11,6 @@ class DBHandler:
             database=db
         )
         self.cursor = self.db.cursor()
-        #self.cursor.execute(f"use {db};")
     
     def get_all_items(self):
         self.cursor.execute("select * from items;")
@@ -27,7 +25,7 @@ class DBHandler:
         return items
 
     def get_item_details(self, uuid):
-        self.cursor.execute(f"select * from items where uuid='{uuid}'")
+        self.cursor.execute(f"select * from items where uuid='{uuid}'") # SQL INJECTION VULN
         res = self.cursor.fetchone()
         if not res:
             return None
@@ -52,7 +50,17 @@ class DBHandler:
         usernames = [i for ii in usernames for i in ii]
         return usernames
 
+    def get_user_details(self, username):
+        query = "select * from users where username=%s"
+        val = (username,)
+        self.cursor.execute(query, val)
+        for row in self.cursor:   # looks stupid, but trust me, this works
+            return {
+                "hashed_pw": row[2],
+                "uuid": row[3]
+            }
+
 # MAIN (testing only)
 if __name__ == "__main__":
     db = DBHandler("root", config("MYSQL_PW"), "localhost", 13306, "local_trader")
-    print("pajdo" in db.get_all_usernames())
+    print(db.get_user_details("user01"))

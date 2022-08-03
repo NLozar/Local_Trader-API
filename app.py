@@ -38,8 +38,10 @@ def register_user():
     try:
         username = request.headers["username"]
         password = request.headers["password"]
-    except Exception:
+    except KeyError:
         return Response(json.dumps({"message": "username or password retrival failed"}), status=400, mimetype="application/json")
+    except Exception:
+        return Response(json.dumps({"message": "internal server error"}), status=500, mimetype="application/json") 
     try:
         usernames = db.get_all_usernames()
         if username in usernames:
@@ -51,6 +53,28 @@ def register_user():
     except Exception:
         return Response(json.dumps({"message": "registering a user into database failed"}), status=500, mimetype="application/json")
     return Response(json.dumps({"message": "User registered"}), status=204, mimetype="application/json")
+
+@app.route("/logUserIn", methods=["GET"])
+def log_user_in():
+    try:
+        username = request.headers["username"]
+        password = request.headers["password"]
+    except KeyError:
+        return Response(json.dumps({"message": "username or password retrival failed"}), status=400, mimetype="application/json")
+    except Exception:
+        return Response(json.dumps({"message": "internal server error"}), status=500, mimetype="application/json")
+    try:
+        usernames = db.get_all_usernames()
+    except Exception:
+        return Response(json.dumps({"message": "internal server error"}), status=500, mimetype="application/json")
+    if username in usernames:
+        user_dets = db.get_user_details(username)
+        if bcrypt.checkpw(password.encode("utf-8"), user_dets["hashed_pw"]):
+            # TODO
+            return jsonify({"msg": "good login"})
+        else:
+            return Response(json.dumps({"message": "bad creds"}), status=404, mimetype="application/json")
+    return Response(json.dumps({"message": "bad creds"}), status=404, mimetype="application/json")
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=PORT, ssl_context=("certs/cert.pem", "certs/key.pem"))
