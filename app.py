@@ -5,6 +5,8 @@ from decouple import config
 import traceback
 import bcrypt
 import uuid
+import jwt
+from datetime import datetime, timedelta, timezone
 
 PORT = 14443
 
@@ -57,7 +59,7 @@ def register_user():
         return jsonify({"message": "registering a user into database failed"}), 500
     return jsonify({"message": "User registered"}), 204
 
-@app.route("/logUserIn", methods=["GET"])
+@app.route("/login", methods=["POST"])
 def log_user_in():
     try:
         username = request.headers["username"]
@@ -75,8 +77,11 @@ def log_user_in():
     if username in usernames:
         user_dets = db.get_user_details(username)
         if bcrypt.checkpw(password.encode("utf-8"), user_dets["hashed_pw"]):
-            # TODO
-            return jsonify({"msg": "good login"})
+            token = jwt.encode({
+                "useruuid": user_dets["uuid"],
+                "expiration": str(datetime.now(timezone.utc) + timedelta(minutes=15))
+            }, config("JWT_SECRET_KEY"), algorithm="HS512")
+            return jsonify({"token": token})
         else:
             return jsonify({"message": "bad creds"}), 404
     return jsonify({"message": "bad creds"}), 404
