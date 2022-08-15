@@ -65,4 +65,3 @@ class DBHandler:
 # MAIN (testing only)
 if __name__ == "__main__":
     db = DBHandler("root", config("MYSQL_PW"), "localhost", 13306, "local_trader")
-    print(db.get_user_details("user01"))
