@@ -81,10 +81,10 @@ def log_user_in():
                 "useruuid": user_dets["uuid"],
                 "expiration": str(datetime.now(timezone.utc) + timedelta(minutes=15))
             }, config("JWT_SECRET_KEY"), algorithm="HS512")
-            return jsonify({"token": token})
+            return jsonify({"bad creds": False, "token": token})
         else:
-            return jsonify({"message": "bad creds"}), 404
-    return jsonify({"message": "bad creds"}), 404
+            return jsonify({"bad creds": True}), 200 # wrong password
+    return jsonify({"bad creds": True}), 200    # unknown username
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=PORT, ssl_context=("certs/cert.pem", "certs/key.pem"))
