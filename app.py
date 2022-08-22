@@ -48,7 +48,7 @@ def register_user():
     try:
         usernames = db.get_all_usernames()
         if username in usernames:
-            return jsonify({"message": f"Username '{username}' is already taken."}), 409
+            return jsonify({"username taken": True}), 200
     except Exception:
         traceback.print_exc()
         return jsonify({"message": "internal server error"}), 500
@@ -57,7 +57,7 @@ def register_user():
     except Exception:
         traceback.print_exc()
         return jsonify({"message": "registering a user into database failed"}), 500
-    return jsonify({"message": "User registered"}), 204
+    return jsonify({"username taken": False}), 200
 
 @app.route("/login", methods=["POST"])
 def log_user_in():
