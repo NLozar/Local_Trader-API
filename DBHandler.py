@@ -61,6 +61,25 @@ class DBHandler:
                 "hashed_pw": row[2],
                 "uuid": row[3]
             }
+    
+    def update_user_info(self, uuid, username=None, password=None):
+        if password:
+            sql = "update users set password=%s where uuid=%s"
+            val = (password, uuid)
+        elif username:
+            sql = "update users set username=%s where uuid=%s"
+            val = (username, uuid)
+        elif username and password:
+            sql = "update users set username=%s, password=%s where uuid=%s"
+            val = (username, password, uuid)
+        self.cursor.execute(sql, val)
+        self.db.commit()
+    
+    def post_item(self, title, seller_name, uuid, seller_uuid, descr, price, contact):
+        sql = "insert into items (title, seller_name, descr, price, contact, uuid, seller_uuid) values (%s, %s, %s, %s, %s, %s, %s)"
+        val = (title, seller_name, descr, price, contact, uuid, seller_uuid)
+        self.cursor.execute(sql, val)
+        self.db.commit()
 
 # MAIN (testing only)
 if __name__ == "__main__":

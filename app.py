@@ -78,13 +78,48 @@ def log_user_in():
         user_dets = db.get_user_details(username)
         if bcrypt.checkpw(password.encode("utf-8"), user_dets["hashed_pw"]):
             token = jwt.encode({
-                "useruuid": user_dets["uuid"],
-                "expiration": str(datetime.now(timezone.utc) + timedelta(minutes=15))
+                "username": username,
+                "userUuid": user_dets["uuid"],
+                "exp": str(int(datetime.timestamp(datetime.now(timezone.utc) + timedelta(minutes=15))))
             }, config("JWT_SECRET_KEY"), algorithm="HS512")
             return jsonify({"bad creds": False, "token": token})
         else:
             return jsonify({"bad creds": True}), 200 # wrong password
     return jsonify({"bad creds": True}), 200    # unknown username
+
+@app.route("/postItem", methods=["POST"])
+def post_item():
+    try:
+        token = request.headers["token"]
+        title = request.headers["title"]
+        contact_info = request.headers["contact_info"]
+    except KeyError:
+        return jsonify({"missing required headers": True}), 400
+    except Exception:
+        return jsonify({"invernal server error": True}), 500
+    try:
+        price = request.headers["price"]
+        descr = request.headers["descr"]
+    except KeyError:
+        price = None
+        descr = None
+    except Exception:
+        return jsonify({"internal server error": True}), 500
+    try:
+        jwt_data = jwt.decode(token, config("JWT_SECRET_KEY"), algorithms=["HS512"])
+        print("decoded jwt:", jwt_data)   # DEBUG
+    except jwt.exceptions.InvalidTokenError:
+        traceback.print_exc()
+        return jsonify({"bad jwt": True}), 200
+    except Exception:
+        traceback.print_exc()
+        return jsonify({"internal server error": True}), 500
+    try:
+        db.post_item(title, jwt_data["username"], str(uuid.uuid4()), jwt_data["userUuid"], descr, price, contact_info)
+        return "", 204
+    except Exception:
+        traceback.print_exc()
+        return jsonify({"internal server error": True}), 500
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=PORT, ssl_context=("certs/cert.pem", "certs/key.pem"))
