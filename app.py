@@ -107,7 +107,6 @@ def post_item():
         return jsonify({"internal server error": True}), 500
     try:
         jwt_data = jwt.decode(token, config("JWT_SECRET_KEY"), algorithms=["HS512"])
-        print("decoded jwt:", jwt_data)   # DEBUG
     except jwt.exceptions.InvalidTokenError:
         traceback.print_exc()
         return jsonify({"bad jwt": True}), 200
@@ -116,10 +115,32 @@ def post_item():
         return jsonify({"internal server error": True}), 500
     try:
         db.post_item(title, jwt_data["username"], str(uuid.uuid4()), jwt_data["userUuid"], descr, price, contact_info)
-        return "", 204
+        return "", 204  # SUCCESS
     except Exception:
         traceback.print_exc()
         return jsonify({"internal server error": True}), 500
+
+@app.route("/editProfile", methods=["POST"])
+def editProfile():
+    try:
+        currName = request.headers["currentUsername"]   # never None
+        newUsername = request.headers["newUsername"]
+        currPw = request.headers["currentPw"]   # never None
+        newPw = request.headers["newPw"]
+    except KeyError:
+        newPw = None
+    try:
+        user_details = db.get_user_details(currName)
+        if bcrypt.checkpw(currPw.encode("utf-8"), user_details["hashed_pw"]):
+            if newUsername in db.get_all_usernames():
+                return jsonify({"username taken": True, "wrong password": False})
+            db.update_user_info(user_details["uuid"], newUsername, newPw)
+        else:
+            return jsonify({"wrong password": True, "username taken": False})
+        return "", 204 # SUCCESS
+    except Exception:
+        traceback.print_exc()
+        raise
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=PORT, ssl_context=("certs/cert.pem", "certs/key.pem"))

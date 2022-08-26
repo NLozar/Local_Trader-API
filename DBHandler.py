@@ -63,15 +63,15 @@ class DBHandler:
             }
     
     def update_user_info(self, uuid, username=None, password=None):
-        if password:
+        if username and password:
+            sql = "update users set username=%s, password=%s where uuid=%s"
+            val = (username, password, uuid)
+        elif password:
             sql = "update users set password=%s where uuid=%s"
             val = (password, uuid)
         elif username:
             sql = "update users set username=%s where uuid=%s"
             val = (username, uuid)
-        elif username and password:
-            sql = "update users set username=%s, password=%s where uuid=%s"
-            val = (username, password, uuid)
         self.cursor.execute(sql, val)
         self.db.commit()
     
