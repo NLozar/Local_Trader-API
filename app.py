@@ -122,13 +122,17 @@ def post_item():
 
 @app.route("/editProfile", methods=["POST"])
 def editProfile():
+    currName = request.headers["currentUsername"]   # never None
+    currPw = request.headers["currentPw"]   # never None
     try:
-        currName = request.headers["currentUsername"]   # never None
-        newUsername = request.headers["newUsername"]
-        currPw = request.headers["currentPw"]   # never None
+        
         newPw = request.headers["newPw"]
     except KeyError:
         newPw = None
+    try:
+        newUsername = request.headers["newUsername"]
+    except KeyError:
+        newUsername = None
     try:
         user_details = db.get_user_details(currName)
         if bcrypt.checkpw(currPw.encode("utf-8"), user_details["hashed_pw"]):
