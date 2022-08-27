@@ -52,6 +52,19 @@ class DBHandler:
             item_details[key] = res[i+OFFSET]
         return item_details
     
+    def get_seller_uuid_of_item(self, item_uuid):
+        query = "select seller_uuid from items where uuid=%s"
+        val = (item_uuid,)
+        db = self.returnDbConn()
+        cursor = db.cursor()
+        cursor.execute(query, val)
+        res = cursor.fetchone()
+        cursor.close()
+        db.close()
+        if res:
+            return res[0]
+        return None
+    
     def register_user(self, username, pw, uuid):
         sql = "insert into users (username, pw, uuid) values (%s, %s, %s)"
         val = (username, pw, uuid)
@@ -116,6 +129,16 @@ class DBHandler:
     def post_item(self, title, seller_name, uuid, seller_uuid, descr, price, contact):
         sql = "insert into items (title, seller_name, descr, price, contact, uuid, seller_uuid) values (%s, %s, %s, %s, %s, %s, %s)"
         val = (title, seller_name, descr, price, contact, uuid, seller_uuid)
+        db = self.returnDbConn()
+        cursor = db.cursor()
+        cursor.execute(sql, val)
+        cursor.close()
+        db.commit()
+        db.close()
+    
+    def delete_item(self, uuid):
+        sql = "delete from items where uuid=%s"
+        val = (uuid,)
         db = self.returnDbConn()
         cursor = db.cursor()
         cursor.execute(sql, val)

@@ -121,7 +121,7 @@ def post_item():
         return jsonify({"internal server error": True}), 500
 
 @app.route("/editProfile", methods=["POST"])
-def editProfile():
+def edit_profile():
     currName = request.headers["currentUsername"]   # never None
     currPw = request.headers["currentPw"]   # never None
     try:
@@ -139,12 +139,30 @@ def editProfile():
             if newUsername in db.get_all_usernames():
                 return jsonify({"username taken": True, "wrong password": False})
             db.update_user_info(user_details["uuid"], newUsername, newPw)
+            return "", 204 # SUCCESS
         else:
             return jsonify({"wrong password": True, "username taken": False})
-        return "", 204 # SUCCESS
     except Exception:
         traceback.print_exc()
         raise
+
+@app.route("/deleteItem", methods=["DELETE"])
+def delete_item():
+    token = request.headers["token"]
+    item_uuid = request.headers["uuid"]
+    try:
+        jwt_data = jwt.decode(token, config("JWT_SECRET_KEY"), algorithms=["HS512"])
+    except jwt.exceptions.InvalidTokenError:
+        traceback.print_exc()
+        return jsonify({"bad jwt": True})
+    seller_uuid = db.get_seller_uuid_of_item(item_uuid)
+    if seller_uuid:
+        if (jwt_data["userUuid"] == seller_uuid):
+            db.delete_item(item_uuid)
+            return ("", 204) # SUCCESS
+        else:
+            return ({"uuid missmatch": True}, 400)
+    return ({"item missing": True}, 400)
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=PORT, ssl_context=("certs/cert.pem", "certs/key.pem"))
