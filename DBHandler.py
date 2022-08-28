@@ -148,6 +148,19 @@ class DBHandler:
         sql = "delete from items where uuid=%s"
         val = (uuid,)
         self.executeNoReturn(sql, val)
+    
+    def delete_user_and_their_listings(self, user_uuid):
+        sql = "delete from items where seller_uuid=%s"
+        val = (user_uuid,)
+        db = self.returnDbConn()
+        cursor = db.cursor()
+        cursor.execute(sql, val)
+        sql = "delete from users where uuid=%s"
+        val = (user_uuid,)
+        cursor.execute(sql, val)
+        cursor.close()
+        db.commit()
+        db.close()
 
 # MAIN (testing only)
 if __name__ == "__main__":

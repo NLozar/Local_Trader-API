@@ -193,5 +193,16 @@ def delete_item():
             return ({"uuid mismatch": True}, 400)
     return ({"item missing": True}, 400)
 
+@app.route("/deleteUser", methods=["DELETE"])
+def delete_user():
+    token = request.headers["token"]
+    try:
+        jwt_data = jwt.decode(token, config("JWT_SECRET_KEY"), algorithms=["HS512"])
+    except jwt.exceptions.InvalidTokenError:
+        traceback.print_exc()
+        return jsonify({"bad jwt": True})
+    db.delete_user_and_their_listings(jwt_data["userUuid"])
+    return ("", 204)    # SUCCESS
+
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=PORT, ssl_context=("certs/cert.pem", "certs/key.pem"))
