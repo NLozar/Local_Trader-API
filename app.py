@@ -98,11 +98,13 @@ def post_item():
     except Exception:
         return jsonify({"invernal server error": True}), 500
     try:
-        price = request.headers["price"]
         descr = request.headers["descr"]
     except KeyError:
-        price = None
         descr = None
+    try:
+        price = request.headers["price"]
+    except KeyError:
+        price = None
     except Exception:
         return jsonify({"internal server error": True}), 500
     try:
@@ -146,6 +148,33 @@ def edit_profile():
         traceback.print_exc()
         raise
 
+@app.route("/editItem", methods=["POST"])
+def edit_item():
+    token = request.headers["token"]
+    item_uuid = request.headers["item_uuid"]
+    title = request.headers["title"]
+    contact_info = request.headers["contact_info"]
+    try:
+        descr = request.headers["descr"]
+    except KeyError:
+        descr = None
+    try:
+        price = request.headers["price"]
+    except KeyError:
+        price = None
+    try:
+        jwt_data = jwt.decode(token, config("JWT_SECRET_KEY"), algorithms=["HS512"])
+    except jwt.exceptions.InvalidTokenError:
+        traceback.print_exc()
+        return jsonify({"bad jwt": True})
+    seller_uuid = db.get_seller_uuid_of_item(item_uuid)
+    if seller_uuid:
+        if (jwt_data["userUuid"] == seller_uuid):
+            db.edit_item(item_uuid, title, descr, price, contact_info)
+            return ("", 204)    # SUCCESS
+        return ({"uuid mismatch": True})
+    return ({"item missing": True}, 400)
+
 @app.route("/deleteItem", methods=["DELETE"])
 def delete_item():
     token = request.headers["token"]
@@ -161,7 +190,7 @@ def delete_item():
             db.delete_item(item_uuid)
             return ("", 204) # SUCCESS
         else:
-            return ({"uuid missmatch": True}, 400)
+            return ({"uuid mismatch": True}, 400)
     return ({"item missing": True}, 400)
 
 if __name__ == "__main__":

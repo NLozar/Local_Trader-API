@@ -18,6 +18,14 @@ class DBHandler:
             database=self.db
         )
     
+    def executeNoReturn(self, sql, val):
+        db = self.returnDbConn()
+        cursor = db.cursor()
+        cursor.execute(sql, val)
+        cursor.close()
+        db.commit()
+        db.close()
+
     def get_all_items(self):
         db = self.returnDbConn()
         cursor = db.cursor()
@@ -129,22 +137,17 @@ class DBHandler:
     def post_item(self, title, seller_name, uuid, seller_uuid, descr, price, contact):
         sql = "insert into items (title, seller_name, descr, price, contact, uuid, seller_uuid) values (%s, %s, %s, %s, %s, %s, %s)"
         val = (title, seller_name, descr, price, contact, uuid, seller_uuid)
-        db = self.returnDbConn()
-        cursor = db.cursor()
-        cursor.execute(sql, val)
-        cursor.close()
-        db.commit()
-        db.close()
+        self.executeNoReturn(sql, val)
     
+    def edit_item(self, uuid, title, descr, price, contact):
+        sql = "update items set title=%s, descr=%s, price=%s, contact=%s where uuid=%s"
+        val = (title, descr, price, contact, uuid)
+        self.executeNoReturn(sql, val)
+        
     def delete_item(self, uuid):
         sql = "delete from items where uuid=%s"
         val = (uuid,)
-        db = self.returnDbConn()
-        cursor = db.cursor()
-        cursor.execute(sql, val)
-        cursor.close()
-        db.commit()
-        db.close()
+        self.executeNoReturn(sql, val)
 
 # MAIN (testing only)
 if __name__ == "__main__":
