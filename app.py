@@ -127,7 +127,6 @@ def edit_profile():
     currName = request.headers["currentUsername"]   # never None
     currPw = request.headers["currentPw"]   # never None
     try:
-        
         newPw = request.headers["newPw"]
     except KeyError:
         newPw = None
@@ -195,13 +194,12 @@ def delete_item():
 
 @app.route("/deleteUser", methods=["DELETE"])
 def delete_user():
-    token = request.headers["token"]
-    try:
-        jwt_data = jwt.decode(token, config("JWT_SECRET_KEY"), algorithms=["HS512"])
-    except jwt.exceptions.InvalidTokenError:
-        traceback.print_exc()
-        return jsonify({"bad jwt": True})
-    db.delete_user_and_their_listings(jwt_data["userUuid"])
+    username = request.headers["username"]
+    password = request.headers["password"]
+    user_dets = db.get_user_details(username)
+    if not bcrypt.checkpw(password.encode("utf-8"), user_dets["hashed_pw"]):
+        return ({"wrong password": True, "username taken": False})
+    db.delete_user_and_their_listings(user_dets["uuid"])
     return ("", 204)    # SUCCESS
 
 if __name__ == "__main__":
