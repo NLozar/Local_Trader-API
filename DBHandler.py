@@ -76,12 +76,7 @@ class DBHandler:
     def register_user(self, username, pw, uuid):
         sql = "insert into users (username, pw, uuid) values (%s, %s, %s)"
         val = (username, pw, uuid)
-        db = self.returnDbConn()
-        cursor = db.cursor()
-        cursor.execute(sql, val)
-        cursor.close()
-        db.commit()
-        db.close()
+        self.executeNoReturn(sql, val)
 
     def get_all_usernames(self):
         db = self.returnDbConn()
@@ -113,14 +108,14 @@ class DBHandler:
         db = self.returnDbConn()
         cursor = db.cursor()
         if username and password:
-            sql = "update users set username=%s, password=%s where uuid=%s"
+            sql = "update users set username=%s, pw=%s where uuid=%s"
             val = (username, password, uuid)
             cursor.execute(sql, val)
             sql = "update items set seller_name=%s where seller_uuid=%s"
             val = (username, uuid)
             cursor.execute(sql, val)
         elif password:
-            sql = "update users set password=%s where uuid=%s"
+            sql = "update users set pw=%s where uuid=%s"
             val = (password, uuid)
             cursor.execute(sql, val)
         elif username:

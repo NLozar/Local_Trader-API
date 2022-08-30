@@ -139,7 +139,10 @@ def edit_profile():
         if bcrypt.checkpw(currPw.encode("utf-8"), user_details["hashed_pw"]):
             if newUsername in db.get_all_usernames():
                 return jsonify({"username taken": True, "wrong password": False})
-            db.update_user_info(user_details["uuid"], newUsername, newPw)
+            if newPw:
+                db.update_user_info(user_details["uuid"], newUsername, bcrypt.hashpw(newPw.encode("utf-8"), bcrypt.gensalt()))
+            else:
+                db.update_user_info(user_details["uuid"], username=newUsername)
             return "", 204 # SUCCESS
         else:
             return jsonify({"wrong password": True, "username taken": False})
@@ -171,7 +174,7 @@ def edit_item():
         if (jwt_data["userUuid"] == seller_uuid):
             db.edit_item(item_uuid, title, descr, price, contact_info)
             return ("", 204)    # SUCCESS
-        return ({"uuid mismatch": True})
+        return ({"uuid mismatch": True}, 400)
     return ({"item missing": True}, 400)
 
 @app.route("/deleteItem", methods=["DELETE"])
