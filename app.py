@@ -76,7 +76,7 @@ def log_user_in():
         return jsonify({"message": "internal server error"}), 500
     if username in usernames:
         user_dets = db.get_user_details(username)
-        if bcrypt.checkpw(password.encode("utf-8"), user_dets["hashed_pw"]):
+        if bcrypt.checkpw(password.encode("utf-8"), bytes(user_dets["hashed_pw"])):
             token = jwt.encode({
                 "username": username,
                 "userUuid": user_dets["uuid"],
@@ -136,7 +136,7 @@ def edit_profile():
         newUsername = None
     try:
         user_details = db.get_user_details(currName)
-        if bcrypt.checkpw(currPw.encode("utf-8"), user_details["hashed_pw"]):
+        if bcrypt.checkpw(currPw.encode("utf-8"), bytes(user_details["hashed_pw"])):
             if newUsername in db.get_all_usernames():
                 return jsonify({"username taken": True, "wrong password": False})
             if newPw:
@@ -200,7 +200,7 @@ def delete_user():
     username = request.headers["username"]
     password = request.headers["password"]
     user_dets = db.get_user_details(username)
-    if not bcrypt.checkpw(password.encode("utf-8"), user_dets["hashed_pw"]):
+    if not bcrypt.checkpw(password.encode("utf-8"), bytes(user_dets["hashed_pw"])):
         return ({"wrong password": True, "username taken": False})
     db.delete_user_and_their_listings(user_dets["uuid"])
     return ("", 204)    # SUCCESS
